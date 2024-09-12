@@ -30,7 +30,7 @@ def synthesize(text, voice, lngsteps=4):
 
 @app.post("/text-to-speech")
 async def text_to_speech(
-    text: str,
+    text: str = Form(...),
     referenceWavFile: Optional[UploadFile] = File(None)
 ):
     ref = default_ref
@@ -58,7 +58,6 @@ async def text_to_speech(
     wavfile.write(filename, content[0], (content[1] * 32767).astype(np.int16))
     
     return FileResponse(filename, media_type="audio/wav", filename=filename)
-
 
 @app.on_event("shutdown")
 def cleanup():
