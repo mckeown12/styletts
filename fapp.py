@@ -7,6 +7,8 @@ from txtsplit import txtsplit
 from tqdm import tqdm
 from typing import Optional
 import datetime
+import os
+import tempfile
 
 app = FastAPI()
 ref = compute_style(f'voices/m-us-4.wav')
@@ -29,14 +31,23 @@ def synthesize(text, voice=ref, lngsteps=4):
 
 @app.post("/text-to-speech")
 async def text_to_speech(text: str, referenceWavFile: Optional[bytes] = None):
+
+    
     if referenceWavFile:
+        # Validate the file extension
+        if not referenceWavFile.filename.endswith(".wav"):
+            raise HTTPException(status_code=400, detail="Invalid file format. Only WAV files are allowed.")
+        
         # Save the uploaded file temporarily
-        with open("temp_reference.wav", "wb") as f:
-            f.write(referenceWavFile)
-        ref = compute_style("temp_reference.wav")
+        temp_file = tempfile.NamedTemporaryFile(delete=False)
+        temp_file.write(referenceWavFile.file.read())
+        temp_file.close()
+        # Compute the style from the temporary file
+        ref = compute_style(temp_file.name)
+        # Clean up the temporary file
+        os.remove(temp_file.name)
     #else ref is global
     content = synthesize(text, ref)  # Assuming this returns a NumPy array
-    
     # Generate a unique filename using datetime
     filename = f"audio_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.wav"
     
