@@ -31,7 +31,7 @@ def synthesize(text, voice, lngsteps=4):
 @app.post("/text-to-speech")
 async def text_to_speech(text: str, referenceWavFile: Optional[UploadFile] = None):
     ref = default_ref
-    if referenceWavFile:
+    if referenceWavFile and referenceWavFile.filename:
         print("using reference")
         # Validate the file extension
         if not referenceWavFile.filename.endswith(".wav"):
@@ -39,24 +39,21 @@ async def text_to_speech(text: str, referenceWavFile: Optional[UploadFile] = Non
         
         # Save the uploaded file temporarily
         temp_file = tempfile.NamedTemporaryFile(delete=False)
-        temp_file.write(referenceWavFile.file.read())
+        temp_file.write(await referenceWavFile.read())
         temp_file.close()
         # Compute the style from the temporary file
         ref = compute_style(temp_file.name)
         print(ref)
         # Clean up the temporary file
         os.remove(temp_file.name)
-    #else ref is global
-    content = synthesize(text, ref)  # Assuming this returns a NumPy array
-    # Generate a unique filename using datetime
+    else:
+        print("using default reference")
+
+    content = synthesize(text, ref)
     filename = f"audio_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.wav"
     
-    # Assuming content is a 1D NumPy array of float32 values between -1 and 1
-    # wavfile.write(filename, 24000, (content * 32767).astype(np.int16))
-    # AttributeError: 'tuple' object has no attribute 'astype'
-    wavfile.write(filename, 24000, (content[1] * 32767).astype(np.int16))
+    wavfile.write(filename, content[0], (content[1] * 32767).astype(np.int16))
     
-    # Return the file as a downloadable response
     return FileResponse(filename, media_type="audio/wav", filename=filename)
 
 @app.on_event("shutdown")
