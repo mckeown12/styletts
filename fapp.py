@@ -32,6 +32,7 @@ def synthesize(text, voice, lngsteps=4):
 async def text_to_speech(text: str, referenceWavFile: Optional[bytes] = None):
     ref = default_ref
     if referenceWavFile:
+        print("using reference")
         # Validate the file extension
         if not referenceWavFile.filename.endswith(".wav"):
             raise HTTPException(status_code=400, detail="Invalid file format. Only WAV files are allowed.")
@@ -42,6 +43,7 @@ async def text_to_speech(text: str, referenceWavFile: Optional[bytes] = None):
         temp_file.close()
         # Compute the style from the temporary file
         ref = compute_style(temp_file.name)
+        print(ref)
         # Clean up the temporary file
         os.remove(temp_file.name)
     #else ref is global
