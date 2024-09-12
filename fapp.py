@@ -50,7 +50,9 @@ async def text_to_speech(text: str, referenceWavFile: Optional[bytes] = None):
     filename = f"audio_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.wav"
     
     # Assuming content is a 1D NumPy array of float32 values between -1 and 1
-    wavfile.write(filename, 24000, (content * 32767).astype(np.int16))
+    # wavfile.write(filename, 24000, (content * 32767).astype(np.int16))
+    # AttributeError: 'tuple' object has no attribute 'astype'
+    wavfile.write(filename, 24000, (content[1] * 32767).astype(np.int16))
     
     # Return the file as a downloadable response
     return FileResponse(filename, media_type="audio/wav", filename=filename)
