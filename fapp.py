@@ -11,9 +11,9 @@ import os
 import tempfile
 
 app = FastAPI()
-ref = compute_style(f'voices/m-us-4.wav')
+default_ref = compute_style(f'voices/m-us-4.wav')
 
-def synthesize(text, voice=ref, lngsteps=4):
+def synthesize(text, voice, lngsteps=4):
     if text.strip() == "":
         raise HTTPException(status_code=400, detail="Text cannot be empty")
     if len(text) > 50000:
@@ -31,8 +31,7 @@ def synthesize(text, voice=ref, lngsteps=4):
 
 @app.post("/text-to-speech")
 async def text_to_speech(text: str, referenceWavFile: Optional[bytes] = None):
-
-    
+    ref = default_ref
     if referenceWavFile:
         # Validate the file extension
         if not referenceWavFile.filename.endswith(".wav"):
