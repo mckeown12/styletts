@@ -1,5 +1,5 @@
-from fastapi import FastAPI
-from fastapi.responses import FileResponse, HTTPException
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 import numpy as np
 import scipy.io.wavfile as wavfile
 from styletts2importable import inference, compute_style
