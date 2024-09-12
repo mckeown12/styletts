@@ -22,7 +22,6 @@ def synthesize(text, voice, lngsteps=4):
     print(text)
     print("*** end ***")
     texts = txtsplit(text)
-    v = voice.lower()
     audios = []
     for t in tqdm(texts):
         print(t)
