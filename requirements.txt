@@ -22,3 +22,5 @@ gradio
 gruut
 #tortoise-tts
 txtsplit
+fastapi
+uvicorn
