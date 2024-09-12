@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 import numpy as np
 import scipy.io.wavfile as wavfile
@@ -29,9 +29,12 @@ def synthesize(text, voice, lngsteps=4):
     return (24000, np.concatenate(audios))
 
 @app.post("/text-to-speech")
-async def text_to_speech(text: str, referenceWavFile: Optional[UploadFile] = None):
+async def text_to_speech(
+    text: str,
+    referenceWavFile: Optional[UploadFile] = File(None)
+):
     ref = default_ref
-    if referenceWavFile and referenceWavFile.filename:
+    if referenceWavFile is not None:
         print("using reference")
         # Validate the file extension
         if not referenceWavFile.filename.endswith(".wav"):
@@ -55,6 +58,7 @@ async def text_to_speech(text: str, referenceWavFile: Optional[UploadFile] = Non
     wavfile.write(filename, content[0], (content[1] * 32767).astype(np.int16))
     
     return FileResponse(filename, media_type="audio/wav", filename=filename)
+
 
 @app.on_event("shutdown")
 def cleanup():
