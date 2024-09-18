@@ -10,7 +10,16 @@ import datetime
 import os
 import tempfile
 
+#allow all origins
+from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 default_ref = compute_style(f'voices/m-us-4.wav')
 
 def synthesize(text, voice, lngsteps=4):
