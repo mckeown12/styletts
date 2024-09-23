@@ -38,7 +38,7 @@ for voice in VoiceChoice:
     voice_path = f'voices/{voice.value}.wav'
     voice_styles[voice.value] = compute_style(voice_path)
 
-default_ref = voice_styles["male4"]  # Default reference voice
+default_ref = voice_styles[VoiceChoice.male4.value]  # Default reference voice
 
 def synthesize(text, voice, lngsteps=4):
     if text.strip() == "":
