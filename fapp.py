@@ -9,8 +9,9 @@ from typing import Optional
 import datetime
 import os
 import tempfile
+from enum import Enum
 
-#allow all origins
+# Allow all origins
 from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 app.add_middleware(
@@ -20,7 +21,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-default_ref = compute_style(f'voices/m-us-4.wav')
+
+class VoiceChoice(str, Enum):
+    female1 = "f-us-1"
+    female2 = "f-us-2"
+    female3 = "f-us-3"
+    female4 = "f-us-4"
+    male1 = "m-us-1"
+    male2 = "m-us-2"
+    male3 = "m-us-3"
+    male4 = "m-us-4"
+
+# Precompute the styles for predefined voices
+voice_styles = {}
+for voice in VoiceChoice:
+    voice_path = f'voices/{voice.value}.wav'
+    voice_styles[voice.value] = compute_style(voice_path)
+
+default_ref = voice_styles["male4"]  # Default reference voice
 
 def synthesize(text, voice, lngsteps=4):
     if text.strip() == "":
@@ -40,11 +58,11 @@ def synthesize(text, voice, lngsteps=4):
 @app.post("/text-to-speech")
 async def text_to_speech(
     text: str = Form(...),
-    referenceWavFile: Optional[UploadFile] = File(None)
+    referenceWavFile: Optional[UploadFile] = File(None),
+    voice_choice: Optional[VoiceChoice] = Form(None)
 ):
-    ref = default_ref
     if referenceWavFile is not None:
-        print("using reference")
+        print("Using uploaded reference WAV file")
         # Validate the file extension
         if not referenceWavFile.filename.endswith(".wav"):
             raise HTTPException(status_code=400, detail="Invalid file format. Only WAV files are allowed.")
@@ -58,8 +76,12 @@ async def text_to_speech(
         print(ref)
         # Clean up the temporary file
         os.remove(temp_file.name)
+    elif voice_choice is not None:
+        print(f"Using selected voice: {voice_choice}")
+        ref = voice_styles[voice_choice.value]
     else:
-        print("using default reference")
+        print("Using default reference voice")
+        ref = default_ref
 
     content = synthesize(text, ref)
     filename = f"audio_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.wav"
@@ -71,7 +93,6 @@ async def text_to_speech(
 @app.on_event("shutdown")
 def cleanup():
     # Clean up temporary files
-    import os
     for file in os.listdir():
         if file.startswith("audio_") and file.endswith(".wav"):
             os.remove(file)
